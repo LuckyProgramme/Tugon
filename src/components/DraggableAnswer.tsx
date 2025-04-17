@@ -1,6 +1,7 @@
+// DraggableAnswer.tsx
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { cn } from '../../utils/cn';
+import { cn } from './cn';
 
 interface DraggableAnswerProps {
   id: string;
@@ -18,7 +19,7 @@ export function DraggableAnswer({ id, answer }: DraggableAnswerProps) {
   } = useSortable({ id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
   };
 

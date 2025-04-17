@@ -21,16 +21,17 @@ interface Progress {
 }
 
 const topics = [
-  { title: "Introduction to Functions", path: "/topics/introduction-to-functions" },
-  { title: "Operations on Functions", path: "/operations" },
-  { title: "Evaluation of Functions", path: "/topics/evaluation-of-functions" },
-  { title: "Composition of Functions", path: "/topics/composition-of-functions" },
-  { title: "Rational Functions", path: "/topics/rational-functions" },
-  { title: "Vertical, Horizontal and Oblique Asymptotes", path: "/topics/asymptotes" },
-  { title: "Solving Rational Equations and Inequalities", path: "/topics/solving-rational-equations" },
-  { title: "Inverse Functions", path: "/topics/inverse-functions" },
-  { title: "Exponential and Logarithmic Functions", path: "/topics/exponential-logarithmic-functions" },
-  { title: "Problem Solving Involving Functions", path: "/topics/problem-solving-functions" },
+  { title: "Introduction to Functions", path: "/introductiontopic" },
+  { title: "Operations on Functions", path: "/operationstopic" },
+  { title: "Evaluation of Functions", path: "/evaluationtopic" },
+  { title: "Composition of Functions", path: "/compositiontopic" },
+  { title: "Rational Functions", path: "/rationaltopic" },
+  { title: "Vertical, Horizontal and Oblique Asymptotes", path: "/asymptotestopic" },
+  { title: "Solving Rational Equations and Inequalities", path: "/rationalinequalitiestopic" },
+  { title: "Inverse Functions", path: "/inversetopic" },
+  { title: "Exponential and Logarithmic Functions", path: "/exponentialandlogtopic" },
+  { title: "Problem Solving Involving Functions", path: "/problemsolvingfunctopic" },
+  { title: "Graphs", path: "/graphs" },
 ];
 
 function Dashboard() {
@@ -65,14 +66,20 @@ function Dashboard() {
           quiz_id,
           score,
           completed_at,
-          quiz:quizzes(*)
+          quiz:quizzes (*)
         `)
         .eq("user_id", user?.id)
         .order("completed_at", { ascending: false });
 
-      if (progressData) {
-        setProgress(progressData);
-      }
+
+     if (progressData) {
+  const fixedProgress = progressData.map((item) => ({
+    ...item,
+    quiz: Array.isArray(item.quiz) ? item.quiz[0] : item.quiz, // ensure single object
+  }));
+
+  setProgress(fixedProgress);
+}
 
       setLoading(false);
     } catch (error) {
@@ -91,6 +98,11 @@ function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        
+      </div>
+
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Topics Section */}
         <motion.div
@@ -211,7 +223,9 @@ function Dashboard() {
                           <h4 className="text-gray-900 font-medium">{item.quiz?.title}</h4>
                           <p className="text-sm text-gray-500">Score: {item.score}</p>
                         </div>
-                        <span className="text-sm text-gray-400">{new Date(item.completed_at).toLocaleDateString()}</span>
+                        <span className="text-sm text-gray-400">
+                          {new Date(item.completed_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </motion.div>
                   ))}

@@ -1,218 +1,331 @@
-import React, { useState } from "react";
-import Footer from "../../components/Footer";
+// Operation.tsx
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Brain, Lightbulb, ArrowRight, RefreshCcw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Latex from "react-latex-next";
+import { useAuth } from "../../hooks/useAuth";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { DraggableAnswer } from "../../components/DraggableAnswer";
 
-function MathProblem({ question, answers, correctAnswer }) {
-  const [droppedAnswers, setDroppedAnswers] = useState([]);
-  const [additionalBoxes, setAdditionalBoxes] = useState([]);
-  const [feedback, setFeedback] = useState("");
-
-  const handleDrop = (event, type, index = null) => {
-    event.preventDefault();
-    const newAnswer = event.dataTransfer.getData("text/plain");
-
-    if (type === "main") {
-      if (!droppedAnswers.includes(newAnswer)) {
-        setDroppedAnswers((prev) => [...prev, newAnswer]);
-      }
-    } else if (type === "additional") {
-      setAdditionalBoxes((prev) =>
-        prev.map((item, i) =>
-          i === index ? (item ? item : newAnswer) : item
-        )
-      );
-    }
+type Question = {
+  id: string;
+  question: string;
+  explanation: string;
+  hint: string;
+  image_url?: string;
+  options: string[];
+  correct_answer: string;
+  ai_feedback: {
+    [key: string]: string[]; // Feedback per answer
   };
-
-  const clearDroppedAnswers = () => setDroppedAnswers([]);
-  const clearAdditionalBoxes = () => setAdditionalBoxes([]);
-
-  const addBox = () => setAdditionalBoxes((prev) => [...prev, ""]);
-
-  const handleSubmit = () => {
-    const allAnswers = [
-      ...droppedAnswers,
-      ...additionalBoxes.filter((ans) => ans !== ""),
-    ];
-    const isCorrect = allAnswers.includes(correctAnswer);
-    setFeedback(
-      isCorrect ? "✅ Correct! Well done!" : "❌ Incorrect. Try again!"
-    );
-  };
-
-  return (
-    <div className="p-4 border rounded-lg bg-white shadow flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">{question}</h2>
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Drop Zones */}
-        <div className="flex flex-col gap-3 flex-grow">
-          <div className="flex gap-2 items-center">
-            {[...Array(1)].map((_, index) => (
-              <div
-                key={index}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, "main")}
-                className="h-16 flex-1 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg bg-gray-100"
-              >
-                {droppedAnswers[index] || "Drop here"}
-              </div>
-            ))}
-            <button
-              onClick={clearDroppedAnswers}
-              className="px-2 py-2 bg-red-500 text-white rounded text-xs"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Additional drop zones */}
-          <div className="flex flex-col gap-2">
-            {additionalBoxes.map((answer, index) => (
-              <div
-                key={index}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, "additional", index)}
-                className="h-16 w-full flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg bg-gray-100"
-              >
-                {answer || "Drop here"}
-              </div>
-            ))}
-
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={addBox}
-                className="px-3 py-2 bg-blue-500 text-white rounded text-sm"
-              >
-                + Add Box
-              </button>
-              <button
-                onClick={clearAdditionalBoxes}
-                className="px-2 py-2 bg-red-500 text-white rounded text-xs"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button & Feedback */}
-          <button
-            onClick={handleSubmit}
-            className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-          >
-            Submit Answer
-          </button>
-          {feedback && (
-            <div
-              className={`mt-2 p-2 rounded ${
-                feedback.includes("✅")
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {feedback}
-            </div>
-          )}
-        </div>
-
-        {/* Draggable Choices */}
-        <div className="flex flex-col gap-2 w-full md:w-60">
-          {answers.map((answer, index) => (
-            <div
-              key={index}
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData("text/plain", answer)}
-              className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 text-center"
-            >
-              {answer}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+};
 
 function Operation() {
-  const sampleProblems = [
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [droppedAnswer, setDroppedAnswer] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+
+  const questions: Question[] = [
     {
-      question: "Find the domain of f(x) = 1 / (x - 3)",
-      answers: ["x ≠ 3", "x ≥ 3", "x ≤ 3", "All real numbers"],
-      correctAnswer: "x ≠ 3",
+      id: "1",
+      question: "What's the weight of raven",
+      explanation: `Let me break this down step by step:
+  
+  1. We can see that 5 squares together weigh 40 units  
+  2. Since all squares are identical, each must weigh the same amount  
+  3. To find the weight of one square, we divide the total weight by the number of squares:  
+  
+  $\\frac{40}{5} = 8$  
+  
+  Therefore, each square weighs 8 units.`,
+      hint: "Look at the total weight and count how many squares there are. What mathematical operation would give you the weight of one square?",
+      options: ["4", "8", "10", "16"],
+      correct_answer: "8",
+      ai_feedback: {
+        "4": ["Almost there. Are you sure you divided correctly?"],
+        "8": ["Excellent work! You've demonstrated a strong understanding of division and proportional reasoning."],
+        "10": ["Not quite, double-check the division calculation."],
+        "16": ["Hmm, looks like you missed the division step. Try again!"],
+      },
     },
     {
-      question: "Determine the range of f(x) = x² - 4",
-      answers: ["y ≥ -4", "y ≤ -4", "All real numbers", "y ≠ -4"],
-      correctAnswer: "y ≥ -4",
+      id: "2",
+      question: "Solve for x: $3x + 5 = 20$",
+      explanation: `Let's solve this equation step by step:
+  
+  1. Start by isolating the term with x:  
+  $3x + 5 = 20$  
+  Subtract 5 from both sides:  
+  $3x = 15$
+  
+  2. Now divide both sides by 3:  
+  $x = \\frac{15}{3} = 5$
+  
+  So, the solution is $x = 5$.`,
+      hint: "Try to isolate x by removing constants first. What’s the opposite of adding 5?",
+      options: ["3", "5", "7", "10"],
+      correct_answer: "5",
+      ai_feedback: {
+        "3": ["Hmm, it seems like you might have missed the division step after isolating x."],
+        "5": ["Great job! You followed the algebraic steps perfectly."],
+        "7": ["Not quite. Make sure to subtract 5 first, then divide."],
+        "10": ["You’re close, but don’t forget to divide after isolating x."],
+      },
     },
     {
-      question: "What is the inverse of f(x) = 2x + 5?",
-      answers: ["(x - 5) / 2", "2x - 5", "(x + 5) / 2", "x / 2 - 5"],
-      correctAnswer: "(x - 5) / 2",
+      id: "3",
+      question: "What’s the area of a triangle with base 10 and height 6?",
+      explanation: `We can use the triangle area formula:  
+  $\\text{Area} = \\frac{1}{2} \\times \\text{base} \\times \\text{height}$  
+  
+  Plug in the values:  
+  $\\text{Area} = \\frac{1}{2} \\times 10 \\times 6 = 30$  
+  
+  So, the area is 30 square units.`,
+      hint: "Do you remember the formula for the area of a triangle?",
+      options: ["60", "30", "16", "36"],
+      correct_answer: "30",
+      ai_feedback: {
+        "60": ["Close, but don't forget to divide by 2 in the formula."],
+        "30": ["Perfect! You applied the triangle area formula correctly."],
+        "16": ["Not quite, try again using the correct formula."],
+        "36": ["Oops, check the multiplication and make sure you divide by 2."],
+      },
     },
     {
-      question: "If f(x) = 3x - 7, find f(4).",
-      answers: ["5", "3", "7", "9"],
-      correctAnswer: "5",
-    },
-    {
-      question:
-        "Determine whether f(x) = x³ + x is an even, odd, or neither function.",
-      answers: ["Odd", "Even", "Neither", "Both"],
-      correctAnswer: "Odd",
-    },
-    {
-      question: "Solve for x in f(x) = x² - 5x + 6 when f(x) = 0.",
-      answers: ["x = 2, x = 3", "x = -2, x = -3", "x = 1, x = 6", "x = 0, x = 5"],
-      correctAnswer: "x = 2, x = 3",
+      id: "4",
+      question: "Which of these numbers is a prime number?",
+      explanation: `Prime numbers are numbers that have only two factors: 1 and themselves.  
+  
+  Let’s look at the options:  
+  - 4: divisible by 1, 2, 4  
+  - 6: divisible by 1, 2, 3, 6  
+  - 9: divisible by 1, 3, 9  
+  - 7: divisible by only 1 and 7  
+  
+  So the correct answer is 7.`,
+      hint: "A prime number has only two factors: 1 and itself.",
+      options: ["4", "6", "9", "7"],
+      correct_answer: "7",
+      ai_feedback: {
+        "4": ["Not quite, 4 has divisors other than 1 and itself."],
+        "6": ["Close, but 6 has more divisors than just 1 and itself."],
+        "9": ["Almost there! Remember that prime numbers only have two divisors."],
+        "7": ["Exactly right. Prime numbers only have two divisors, and 7 fits that definition perfectly."],
+      },
     },
   ];
 
+  useEffect(() => {
+    if (!user) navigate("/login");
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const currentOptions = [...questions[currentQuestionIndex].options];
+    setShuffledOptions(currentOptions.sort(() => Math.random() - 0.5));
+    setDroppedAnswer(null);
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    setShowExplanation(false);
+    setShowHint(false);
+  }, [currentQuestionIndex]);
+
+  const handleDragEnd = (event: any) => {
+    const { active } = event;
+    const answer = active.id as string;
+    if (!selectedAnswer) {
+      setDroppedAnswer(answer);
+      setSelectedAnswer(answer);
+      const correct = answer === questions[currentQuestionIndex].correct_answer;
+      setIsCorrect(correct);
+      setProgress(((currentQuestionIndex + 1) / questions.length) * 100);
+      setAttempts((prev) => prev + 1);
+    }
+  };
+
+  const handleTryAgain = () => {
+    setDroppedAnswer(null);
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    setShowExplanation(false); // Ensure explanation is hidden
+    setAttempts((prev) => prev + 1); // Increment attempts
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1); // Move to the next question
+      setDroppedAnswer(null); // Reset dropped answer
+      setSelectedAnswer(null); // Reset selected answer
+      setIsCorrect(null); // Reset correctness state
+      setShowExplanation(false); // Hide explanation
+      setShowHint(false); // Hide hint
+      setAttempts(0); // Reset attempts for the next question
+    } else {
+      navigate("/dashboard"); // Navigate to the dashboard or finish page
+    }
+  };
+
+  const getRandomFeedback = (feedbackArray: string[]) => {
+    return feedbackArray[Math.floor(Math.random() * feedbackArray.length)];
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 text-center">
-          Operations on Functions
-        </h1>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="relative h-1 w-full bg-gray-200 rounded-full mb-8">
+        <motion.div
+          className="absolute h-full bg-green-500 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5 }}
+        />
+      </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-          <p className="text-gray-700">
-            In this lesson, you will learn how to perform operations on
-            functions such as addition, subtraction, multiplication, and
-            division.
-          </p>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestionIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="p-6"
+          >
+            <div className="flex items-center space-x-3 mb-6 p-4 bg-indigo-50 rounded-lg">
+              <Brain className="h-6 w-6 text-indigo-600" />
+              <div className="text-sm text-indigo-700">
+                Think deeply and drag the correct answer.
+              </div>
+            </div>
 
-          <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>
-              <strong>Addition:</strong> (f + g)(x) = f(x) + g(x)
-            </li>
-            <li>
-              <strong>Subtraction:</strong> (f - g)(x) = f(x) - g(x)
-            </li>
-            <li>
-              <strong>Multiplication:</strong> (f × g)(x) = f(x) × g(x)
-            </li>
-            <li>
-              <strong>Division:</strong> (f ÷ g)(x) = f(x) ÷ g(x), where g(x) ≠
-              0
-            </li>
-          </ul>
+            <h2 className="text-xl font-semibold mb-6">
+              <Latex>{questions[currentQuestionIndex].question}</Latex>
+            </h2>
 
-          <p className="text-gray-700">
-            Try solving some examples below and test your understanding.
-          </p>
-        </div>
+            {!selectedAnswer && (
+              <button
+                onClick={() => setShowHint(true)}
+                className="flex items-center space-x-2 mb-6 text-indigo-600 hover:text-indigo-700"
+              >
+                <Lightbulb className="h-4 w-4" />
+                <span>Need a hint?</span>
+              </button>
+            )}
 
-        <div className="space-y-8">
-          {sampleProblems.map((problem, index) => (
-            <MathProblem
-              key={index}
-              question={problem.question}
-              answers={problem.answers}
-              correctAnswer={problem.correctAnswer}
-            />
-          ))}
-        </div>
-      </main>
-      <Footer />
+            {showHint && !selectedAnswer && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-blue-50 rounded-lg text-blue-700"
+              >
+                <div className="flex items-center space-x-2">
+                  <Lightbulb className="h-5 w-5" />
+                  <span>{questions[currentQuestionIndex].hint}</span>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="mb-6 p-4 border-2 border-dashed border-gray-400 rounded-md min-h-[60px] flex items-center justify-center text-gray-600">
+              {droppedAnswer ? (
+                <div className="text-lg font-semibold text-gray-800">{droppedAnswer}</div>
+              ) : (
+                <span>Drag your answer here</span>
+              )}
+            </div>
+
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={shuffledOptions} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {shuffledOptions.map((option) => (
+                    <DraggableAnswer key={option} id={option} answer={option} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            {selectedAnswer && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-4 rounded-lg ${
+                  isCorrect ? "bg-green-50" : "bg-yellow-50"
+                } mb-6`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Brain className="h-5 w-5 text-indigo-600" />
+                  <p
+                    className={`font-medium ${
+                      isCorrect ? "text-green-700" : "text-red-700"
+                    }`}
+                  >
+                    {getRandomFeedback(questions[currentQuestionIndex].ai_feedback[selectedAnswer!])}
+                  </p>
+                </div>
+
+                {!isCorrect && attempts < 3 && (
+                  <div className="mt-4 flex space-x-4">
+                    <button
+                      onClick={handleTryAgain}
+                      className="flex items-center space-x-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+                    >
+                      <RefreshCcw className="h-4 w-4" />
+                      <span>Try again</span>
+                    </button>
+                    <button
+                      onClick={() => setShowExplanation(true)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                    >
+                      See explanation
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {(showExplanation || (attempts >= 3 && !isCorrect)) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="bg-gray-50 rounded-lg p-6 mb-6"
+              >
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Let me explain this concept
+                </h3>
+                <div className="prose">
+                  <Latex>{questions[currentQuestionIndex].explanation}</Latex>
+                </div>
+              </motion.div>
+            )}
+
+            {(isCorrect || showExplanation || attempts >= 3) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-end"
+              >
+                <button
+                  onClick={handleNext}
+                  className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  <span>
+                    {currentQuestionIndex === questions.length - 1 ? "Finish" : "Continue"}
+                  </span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

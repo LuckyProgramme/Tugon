@@ -52,7 +52,8 @@ function HostGame() {
         .insert({
           quiz_id: selectedQuiz,
           host_id: user?.id,
-          status: 'waiting'
+          status: 'active', // Set the session status to 'active' immediately
+          players: [user?.id], // Add the host as the only player
         })
         .select()
         .single();
@@ -62,10 +63,11 @@ function HostGame() {
         setSessionCode(data.id);
         navigator.clipboard.writeText(data.id);
         toast.success('Session Created & Code Copied!');
-        navigate(`/game/${data.id}`);
+        navigate(`/game/${data.id}`); // Navigate to the game session
       }
     } catch (error) {
       console.error('Error creating session:', error);
+      toast.error('Failed to create session. Please try again.');
     }
   };
 
@@ -120,7 +122,7 @@ function HostGame() {
               </div>
               <div className="flex items-center">
                 <Users className="h-4 w-4 mr-1" />
-                <span>Multiplayer</span>
+                <span>Multiplayer (Host Only Supported)</span>
               </div>
             </div>
 
