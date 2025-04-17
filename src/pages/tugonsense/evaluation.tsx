@@ -1,13 +1,15 @@
 // Operation.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
 import { useParams, useNavigate } from "react-router-dom";
 import { Brain, Lightbulb, ArrowRight, RefreshCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Latex from "react-latex-next";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { DraggableAnswer } from "../../../components/DraggableAnswer";
+import { DraggableAnswer } from "../../components/DraggableAnswer";
+
 
 type Question = {
   id: string;
@@ -22,7 +24,7 @@ type Question = {
   };
 };
 
-function Operation() {
+function Evaluation() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -36,93 +38,78 @@ function Operation() {
   const [attempts, setAttempts] = useState(0);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
 
+
   const questions: Question[] = [
     {
       id: "1",
-      question: "What's the weight of raven",
-      explanation: `Let me break this down step by step:
+      question: "Evaluate $f(x) = 2x^2 + 3$ when $x = 4$",
+      explanation: `To evaluate $f(x) = 2x + 3$ when $x = 4$, substitute $4$ for $x$:
   
-  1. We can see that 5 squares together weigh 40 units  
-  2. Since all squares are identical, each must weigh the same amount  
-  3. To find the weight of one square, we divide the total weight by the number of squares:  
+  $f(4) = 2(4) + 3 = 8 + 3 = 11$
   
-  $\\frac{40}{5} = 8$  
-  
-  Therefore, each square weighs 8 units.`,
-      hint: "Look at the total weight and count how many squares there are. What mathematical operation would give you the weight of one square?",
-      options: ["4", "8", "10", "16"],
-      correct_answer: "8",
+  So, $f(4) = 11$.`,
+      hint: "Substitute the value of x into the function and simplify.",
+      options: ["7", "8", "11", "12"],
+      correct_answer: "11",
       ai_feedback: {
-        "4": ["Almost there. Are you sure you divided correctly?"],
-        "8": ["Excellent work! You've demonstrated a strong understanding of division and proportional reasoning."],
-        "10": ["Not quite, double-check the division calculation."],
-        "16": ["Hmm, looks like you missed the division step. Try again!"],
+        "7": ["Not quite. Did you multiply $2x$ correctly?"],
+        "8": ["Close, but don't forget to add the constant $3$."],
+        "11": ["Great job! You evaluated the function correctly."],
+        "12": ["Hmm, check your addition step again."],
       },
     },
     {
       id: "2",
-      question: "Solve for x: $3x + 5 = 20$",
-      explanation: `Let's solve this equation step by step:
+      question: "If $g(x) = x^2 - 5x + 6$, what is $g(2)$?",
+      explanation: `To evaluate $g(x) = x^2 - 5x + 6$ when $x = 2$, substitute $2$ for $x$:
   
-  1. Start by isolating the term with x:  
-  $3x + 5 = 20$  
-  Subtract 5 from both sides:  
-  $3x = 15$
+  $g(2) = (2)^2 - 5(2) + 6 = 4 - 10 + 6 = 0$
   
-  2. Now divide both sides by 3:  
-  $x = \\frac{15}{3} = 5$
-  
-  So, the solution is $x = 5$.`,
-      hint: "Try to isolate x by removing constants first. What’s the opposite of adding 5?",
-      options: ["3", "5", "7", "10"],
-      correct_answer: "5",
+  So, $g(2) = 0$.`,
+      hint: "Substitute $x = 2$ into the function and simplify step by step.",
+      options: ["0", "2", "-2", "6"],
+      correct_answer: "0",
       ai_feedback: {
-        "3": ["Hmm, it seems like you might have missed the division step after isolating x."],
-        "5": ["Great job! You followed the algebraic steps perfectly."],
-        "7": ["Not quite. Make sure to subtract 5 first, then divide."],
-        "10": ["You’re close, but don’t forget to divide after isolating x."],
+        "0": ["Excellent! You evaluated the function correctly."],
+        "2": ["Not quite. Did you simplify all terms correctly?"],
+        "-2": ["Hmm, check your subtraction step again."],
+        "6": ["Close, but double-check your calculations."],
       },
     },
     {
       id: "3",
-      question: "What’s the area of a triangle with base 10 and height 6?",
-      explanation: `We can use the triangle area formula:  
-  $\\text{Area} = \\frac{1}{2} \\times \\text{base} \\times \\text{height}$  
+      question: "Find $h(3)$ if $h(x) = 3x^2 - 4x + 1$.",
+      explanation: `To evaluate $h(x) = 3x^2 - 4x + 1$ when $x = 3$, substitute $3$ for $x$:
   
-  Plug in the values:  
-  $\\text{Area} = \\frac{1}{2} \\times 10 \\times 6 = 30$  
+  $h(3) = 3(3)^2 - 4(3) + 1 = 3(9) - 12 + 1 = 27 - 12 + 1 = 16$
   
-  So, the area is 30 square units.`,
-      hint: "Do you remember the formula for the area of a triangle?",
-      options: ["60", "30", "16", "36"],
-      correct_answer: "30",
+  So, $h(3) = 16$.`,
+      hint: "Substitute $x = 3$ into the function and simplify step by step.",
+      options: ["10", "16", "18", "20"],
+      correct_answer: "16",
       ai_feedback: {
-        "60": ["Close, but don't forget to divide by 2 in the formula."],
-        "30": ["Perfect! You applied the triangle area formula correctly."],
-        "16": ["Not quite, try again using the correct formula."],
-        "36": ["Oops, check the multiplication and make sure you divide by 2."],
+        "10": ["Not quite. Did you calculate $3x^2$ correctly?"],
+        "16": ["Great work! You evaluated the function correctly."],
+        "18": ["Close, but check your subtraction step."],
+        "20": ["Hmm, double-check your calculations."],
       },
     },
     {
       id: "4",
-      question: "Which of these numbers is a prime number?",
-      explanation: `Prime numbers are numbers that have only two factors: 1 and themselves.  
+      question: "Evaluate $k(x) = \\frac{x + 2}{x - 1}$ when $x = 3$.",
+      explanation: `To evaluate $k(x) = \\frac{x + 2}{x - 1}$ when $x = 3$, substitute $3$ for $x$:
   
-  Let’s look at the options:  
-  - 4: divisible by 1, 2, 4  
-  - 6: divisible by 1, 2, 3, 6  
-  - 9: divisible by 1, 3, 9  
-  - 7: divisible by only 1 and 7  
+  $k(3) = \\frac{3 + 2}{3 - 1} = \\frac{5}{2}$
   
-  So the correct answer is 7.`,
-      hint: "A prime number has only two factors: 1 and itself.",
-      options: ["4", "6", "9", "7"],
-      correct_answer: "7",
+  So, $k(3) = \\frac{5}{2}$.`,
+      hint: "Substitute $x = 3$ into the function and simplify the fraction.",
+      options: ["2", "2.5", "3", "5"],
+      correct_answer: "2.5",
       ai_feedback: {
-        "4": ["Not quite, 4 has divisors other than 1 and itself."],
-        "6": ["Close, but 6 has more divisors than just 1 and itself."],
-        "9": ["Almost there! Remember that prime numbers only have two divisors."],
-        "7": ["Exactly right. Prime numbers only have two divisors, and 7 fits that definition perfectly."],
+        "2": ["Not quite. Did you simplify the fraction correctly?"],
+        "2.5": ["Excellent! You evaluated the function correctly."],
+        "3": ["Close, but check your division step."],
+        "5": ["Hmm, double-check your calculations."],
       },
     },
   ];
@@ -141,6 +128,7 @@ function Operation() {
     setShowHint(false);
   }, [currentQuestionIndex]);
 
+ 
   const handleDragEnd = (event: any) => {
     const { active } = event;
     const answer = active.id as string;
@@ -330,4 +318,4 @@ function Operation() {
   );
 }
 
-export default Operation;
+export default Evaluation;

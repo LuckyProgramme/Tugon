@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import Radio from "../components/Radio"; // Ensure this component exists
 
 const topics = [
-  { title: "Operations on Functions", path: "/difficulty" },
-  { title: "Evaluation of Functions", path: "/evaluation" },
-  { title: "Composition of Functions", path: "/topics/composition-of-functions" },
+  { title: "Operations on Functions", path: "/operations" },
+  { title: "Evaluation of Functions", path: "/dEvaluation" },
+  { title: "Composition of Functions", path: "/compositiontopic" },
   { title: "Rational Functions", path: "/topics/rational-functions" },
   { title: "Vertical, Horizontal and Oblique Asymptotes", path: "/topics/asymptotes" },
   { title: "Solving Rational Equations and Inequalities", path: "/topics/solving-rational-equations" },
