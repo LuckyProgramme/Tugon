@@ -1,11 +1,21 @@
 import React from "react";
+import { useRouter } from "next/router"; // Import useRouter
 import Footer from "../../../components/Footer";
 
-function DifficultySelector() {
+function DifficultyEvaluation() {
+  const router = useRouter(); // Initialize the router
+
   const difficultyInfo = {
     Easy: "Basic problems for quick practice and confidence building.",
     Average: "Moderate problems to test understanding of core concepts.",
     Hard: "Challenging problems to push your problem-solving skills.",
+  };
+
+  const handleNavigation = (level: string) => {
+    if (level === "Easy") {
+      router.push("/tugonsense/evaluation/eEvaluationPhase1"); // Navigate to eEvaluationPhase1
+    }
+    // Add navigation logic for other levels if needed
   };
 
   return (
@@ -17,6 +27,7 @@ function DifficultySelector() {
             {["Easy", "Average", "Hard"].map((level) => (
               <div key={level} className="relative group">
                 <button
+                  onClick={() => handleNavigation(level)} // Add onClick handler
                   className={`px-6 py-3 rounded-lg shadow text-white font-semibold transition-colors duration-300 ${
                     level === "Easy"
                       ? "bg-green-500 hover:bg-green-600"
@@ -40,4 +51,4 @@ function DifficultySelector() {
   );
 }
 
-export default DifficultySelector;
+export default DifficultyEvaluation;

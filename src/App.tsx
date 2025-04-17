@@ -13,7 +13,10 @@ import TugonSense from './pages/TugonSense';
 
 import Operation from './pages/tugonsense/operations';
 import Evaluation from './pages/tugonsense/evaluation';
-import DifficultySelector from './pages/tugonsense/evaluation/dEvaluation';
+
+
+// Tugg
+import DifficultyEvaluation from './pages/tugonsense/evaluation/dEvaluation';
 import Radio from './components/Radio';
 import FloatingAIButton from './components/FloatingAIButton';
 
@@ -46,10 +49,13 @@ function App() {
           <Route path="/host" element={<HostGame />} />
           <Route path="/game/:id" element={<Game />} />
 
-          
+          {/* TugonSense Routes */}
+            {/* TugonSense Evaluation Routes */}
+            <Route path="/dEvaluation" element={<DifficultyEvaluation/>}/>
+          {/* TugonSense Main Routes */}
           <Route path="/operations" element={<Operation />} />
           <Route path="/evaluation" element={<Evaluation/>} />
-          <Route path="/dEvaluation" element={<DifficultySelector/>}/>
+        
 
           <Route path="/introductiontopic" element={<Introductiontopic />} />
           <Route path="/operationstopic" element={<Operationstopic />} />
