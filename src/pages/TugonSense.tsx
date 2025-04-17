@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import Radio from "../components/Radio"; // Ensure this component exists
 
 const topics = [
-  { title: "Operations on Functions", path: "/operations" },
+  { title: "Operations on Functions", path: "/difficulty" },
   { title: "Evaluation of Functions", path: "/evaluation" },
   { title: "Composition of Functions", path: "/topics/composition-of-functions" },
   { title: "Rational Functions", path: "/topics/rational-functions" },

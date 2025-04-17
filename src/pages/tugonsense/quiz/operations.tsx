@@ -4,10 +4,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Brain, Lightbulb, ArrowRight, RefreshCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Latex from "react-latex-next";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { DraggableAnswer } from "../../components/DraggableAnswer";
+import { DraggableAnswer } from "../../../components/DraggableAnswer";
 
 type Question = {
   id: string;

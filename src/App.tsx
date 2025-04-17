@@ -11,8 +11,9 @@ import HostGame from './pages/HostGame';
 import Game from './pages/Game';
 import TugonSense from './pages/TugonSense';
 
-import Operation from './pages/tugonsense/operations';
-import Evaluation from './pages/tugonsense/evaluation';
+import Operation from './pages/tugonsense/quiz/operations';
+import Evaluation from './pages/tugonsense/quiz/evaluation';
+import DifficultySelector from './pages/tugonsense/difficulty';
 import Radio from './components/Radio';
 import FloatingAIButton from './components/FloatingAIButton';
 
@@ -27,6 +28,7 @@ import RationalEquationsInequalities from './pages/topics/rationalinequalitiesto
 import Inversetopic from './pages/topics/inversetopic';
 import ExponentialLogarithmictopic from './pages/topics/exponentialandlogtopic';
 import FunctionProblemSolvingtopic from './pages/topics/problemsolvingfunctopic';
+
 
 function App() {
   return (
@@ -43,8 +45,11 @@ function App() {
           <Route path="/tugonsense" element={<TugonSense />} />
           <Route path="/host" element={<HostGame />} />
           <Route path="/game/:id" element={<Game />} />
+
+          
           <Route path="/operations" element={<Operation />} />
           <Route path="/evaluation" element={<Evaluation/>} />
+          <Route path="/difficulty" element={<DifficultySelector/>}/>
 
           <Route path="/introductiontopic" element={<Introductiontopic />} />
           <Route path="/operationstopic" element={<Operationstopic />} />

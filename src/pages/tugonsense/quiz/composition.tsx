@@ -1,22 +1,18 @@
-// Operation.tsx
-import { useEffect, useState } from "react";
-
-import { useParams, useNavigate } from "react-router-dom";
-import { Brain, Lightbulb, ArrowRight, RefreshCcw } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import Latex from "react-latex-next";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { DraggableAnswer } from "../../components/DraggableAnswer";
-
+import { DraggableAnswer } from "../../../components/DraggableAnswer";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, RefreshCcw, Lightbulb } from "lucide-react";
 
 type Question = {
   id: string;
   question: string;
   explanation: string;
   hint: string;
-  image_url?: string;
   options: string[];
   correct_answer: string;
   ai_feedback: {
@@ -24,7 +20,7 @@ type Question = {
   };
 };
 
-function Evaluation() {
+function Composition() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -38,78 +34,93 @@ function Evaluation() {
   const [attempts, setAttempts] = useState(0);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
 
-
   const questions: Question[] = [
     {
       id: "1",
-      question: "Evaluate $f(x) = 2x^2 + 3$ when $x = 4$",
-      explanation: `To evaluate $f(x) = 2x + 3$ when $x = 4$, substitute $4$ for $x$:
+      question: "If $f(x) = 2x + 3$ and $g(x) = x^2$, find $(f \\circ g)(2)$.",
+      explanation: `To find $(f \\circ g)(2)$, first evaluate $g(2)$:
   
-  $f(4) = 2(4) + 3 = 8 + 3 = 11$
+  $g(2) = (2)^2 = 4$
   
-  So, $f(4) = 11$.`,
-      hint: "Substitute the value of x into the function and simplify.",
+  Then, substitute $g(2)$ into $f(x)$:
+  
+  $f(g(2)) = f(4) = 2(4) + 3 = 8 + 3 = 11$
+  
+  So, $(f \\circ g)(2) = 11$.`,
+      hint: "Evaluate $g(2)$ first, then substitute the result into $f(x)$.",
       options: ["7", "8", "11", "12"],
       correct_answer: "11",
       ai_feedback: {
-        "7": ["Not quite. Did you multiply $2x$ correctly?"],
-        "8": ["Close, but don't forget to add the constant $3$."],
-        "11": ["Great job! You evaluated the function correctly."],
+        "7": ["Not quite. Did you evaluate $g(2)$ correctly?"],
+        "8": ["Close, but don't forget to apply $f(x)$ to $g(2)$. Check your addition."],
+        "11": ["Great job! You correctly evaluated the composition of functions."],
         "12": ["Hmm, check your addition step again."],
       },
     },
     {
       id: "2",
-      question: "If $g(x) = x^2 - 5x + 6$, what is $g(2)$?",
-      explanation: `To evaluate $g(x) = x^2 - 5x + 6$ when $x = 2$, substitute $2$ for $x$:
+      question: "If $f(x) = x + 1$ and $g(x) = 3x - 2$, find $(g \\circ f)(3)$.",
+      explanation: `To find $(g \\circ f)(3)$, first evaluate $f(3)$:
   
-  $g(2) = (2)^2 - 5(2) + 6 = 4 - 10 + 6 = 0$
+  $f(3) = 3 + 1 = 4$
   
-  So, $g(2) = 0$.`,
-      hint: "Substitute $x = 2$ into the function and simplify step by step.",
-      options: ["0", "2", "-2", "6"],
-      correct_answer: "0",
+  Then, substitute $f(3)$ into $g(x)$:
+  
+  $g(f(3)) = g(4) = 3(4) - 2 = 12 - 2 = 10$
+  
+  So, $(g \\circ f)(3) = 10$.`,
+      hint: "Evaluate $f(3)$ first, then substitute the result into $g(x)$.",
+      options: ["8", "9", "10", "11"],
+      correct_answer: "10",
       ai_feedback: {
-        "0": ["Excellent! You evaluated the function correctly."],
-        "2": ["Not quite. Did you simplify all terms correctly?"],
-        "-2": ["Hmm, check your subtraction step again."],
-        "6": ["Close, but double-check your calculations."],
+        "8": ["Not quite. Did you evaluate $f(3)$ correctly?"],
+        "9": ["Close, but check your subtraction step in $g(x)$. Double-check your math."],
+        "10": ["Excellent! You correctly evaluated the composition of functions."],
+        "11": ["Hmm, check your calculations again."],
       },
     },
     {
       id: "3",
-      question: "Find $h(3)$ if $h(x) = 3x^2 - 4x + 1$.",
-      explanation: `To evaluate $h(x) = 3x^2 - 4x + 1$ when $x = 3$, substitute $3$ for $x$:
+      question: "If $f(x) = 2x$ and $g(x) = x - 3$, find $(f \\circ g)(5)$.",
+      explanation: `To find $(f \\circ g)(5)$, first evaluate $g(5)$:
   
-  $h(3) = 3(3)^2 - 4(3) + 1 = 3(9) - 12 + 1 = 27 - 12 + 1 = 16$
+  $g(5) = 5 - 3 = 2$
   
-  So, $h(3) = 16$.`,
-      hint: "Substitute $x = 3$ into the function and simplify step by step.",
-      options: ["10", "16", "18", "20"],
-      correct_answer: "16",
+  Then, substitute $g(5)$ into $f(x)$:
+  
+  $f(g(5)) = f(2) = 2(2) = 4$
+  
+  So, $(f \\circ g)(5) = 4$.`,
+      hint: "Evaluate $g(5)$ first, then substitute the result into $f(x)$.",
+      options: ["2", "4", "6", "8"],
+      correct_answer: "4",
       ai_feedback: {
-        "10": ["Not quite. Did you calculate $3x^2$ correctly?"],
-        "16": ["Great work! You evaluated the function correctly."],
-        "18": ["Close, but check your subtraction step."],
-        "20": ["Hmm, double-check your calculations."],
+        "2": ["Not quite. Did you apply $f(x)$ to $g(5)$ correctly?"],
+        "4": ["Great work! You correctly evaluated the composition of functions."],
+        "6": ["Close, but check your multiplication step in $f(x)$. Double-check your math."],
+        "8": ["Hmm, check your calculations again."],
       },
     },
     {
       id: "4",
-      question: "Evaluate $k(x) = \\frac{x + 2}{x - 1}$ when $x = 3$.",
-      explanation: `To evaluate $k(x) = \\frac{x + 2}{x - 1}$ when $x = 3$, substitute $3$ for $x$:
+      question: "If $f(x) = x^2$ and $g(x) = 2x + 1$, find $(f \\circ g)(-1)$.",
+      explanation: `To find $(f \\circ g)(-1)$, first evaluate $g(-1)$:
   
-  $k(3) = \\frac{3 + 2}{3 - 1} = \\frac{5}{2}$
+  $g(-1) = 2(-1) + 1 = -2 + 1 = -1$
   
-  So, $k(3) = \\frac{5}{2}$.`,
-      hint: "Substitute $x = 3$ into the function and simplify the fraction.",
-      options: ["2", "2.5", "3", "5"],
-      correct_answer: "2.5",
+  Then, substitute $g(-1)$ into $f(x)$:
+  
+  $f(g(-1)) = f(-1) = (-1)^2 = 1$
+  
+  So, $(f \\circ g)(-1) = 1$.`,
+      hint: "Evaluate $g(-1)$ first, then substitute the result into $f(x)$.",
+      options: ["-1", "0", "1", "2"],
+      correct_answer: "1",
       ai_feedback: {
-        "2": ["Not quite. Did you simplify the fraction correctly?"],
-        "2.5": ["Excellent! You evaluated the function correctly."],
-        "3": ["Close, but check your division step."],
-        "5": ["Hmm, double-check your calculations."],
+        "-1": ["Not quite. Did you square $g(-1)$ correctly?"],
+        "0": ["Close, but check your calculations for $g(-1)$. Double-check your math."],
+        "1": ["Excellent! You correctly evaluated the composition of functions."],
+        "2": ["Hmm, check your calculations again."],
       },
     },
   ];
@@ -126,19 +137,19 @@ function Evaluation() {
     setIsCorrect(null);
     setShowExplanation(false);
     setShowHint(false);
+    setAttempts(0); // Reset attempts for the next question
   }, [currentQuestionIndex]);
 
- 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string } }) => {
     const { active } = event;
-    const answer = active.id as string;
+    const answer = active.id;
     if (!selectedAnswer) {
       setDroppedAnswer(answer);
       setSelectedAnswer(answer);
       const correct = answer === questions[currentQuestionIndex].correct_answer;
       setIsCorrect(correct);
       setProgress(((currentQuestionIndex + 1) / questions.length) * 100);
-      setAttempts((prev) => prev + 1);
+      if (!correct) setAttempts((prev) => prev + 1);
     }
   };
 
@@ -153,19 +164,9 @@ function Evaluation() {
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1); // Move to the next question
-      setDroppedAnswer(null); // Reset dropped answer
-      setSelectedAnswer(null); // Reset selected answer
-      setIsCorrect(null); // Reset correctness state
-      setShowExplanation(false); // Hide explanation
-      setShowHint(false); // Hide hint
-      setAttempts(0); // Reset attempts for the next question
     } else {
       navigate("/dashboard"); // Navigate to the dashboard or finish page
     }
-  };
-
-  const getRandomFeedback = (feedbackArray: string[]) => {
-    return feedbackArray[Math.floor(Math.random() * feedbackArray.length)];
   };
 
   return (
@@ -182,19 +183,12 @@ function Evaluation() {
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentQuestionIndex}
+            key={currentQuestionIndex} // Ensure this updates when the question index changes
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="p-6"
           >
-            <div className="flex items-center space-x-3 mb-6 p-4 bg-indigo-50 rounded-lg">
-              <Brain className="h-6 w-6 text-indigo-600" />
-              <div className="text-sm text-indigo-700">
-                Think deeply and drag the correct answer.
-              </div>
-            </div>
-
             <h2 className="text-xl font-semibold mb-6">
               <Latex>{questions[currentQuestionIndex].question}</Latex>
             </h2>
@@ -222,7 +216,10 @@ function Evaluation() {
               </motion.div>
             )}
 
-            <div className="mb-6 p-4 border-2 border-dashed border-gray-400 rounded-md min-h-[60px] flex items-center justify-center text-gray-600">
+            <div
+              className="mb-6 p-4 border-2 border-dashed border-gray-400 rounded-md min-h-[60px] flex items-center justify-center text-gray-600"
+              aria-label="Drop area for answers"
+            >
               {droppedAnswer ? (
                 <div className="text-lg font-semibold text-gray-800">{droppedAnswer}</div>
               ) : (
@@ -248,16 +245,15 @@ function Evaluation() {
                   isCorrect ? "bg-green-50" : "bg-yellow-50"
                 } mb-6`}
               >
-                <div className="flex items-center space-x-3">
-                  <Brain className="h-5 w-5 text-indigo-600" />
-                  <p
-                    className={`font-medium ${
-                      isCorrect ? "text-green-700" : "text-red-700"
-                    }`}
-                  >
-                    {getRandomFeedback(questions[currentQuestionIndex].ai_feedback[selectedAnswer!])}
-                  </p>
-                </div>
+                <p
+                  className={`font-medium ${
+                    isCorrect ? "text-green-700" : "text-red-700"
+                  }`}
+                >
+                  {isCorrect
+                    ? questions[currentQuestionIndex].ai_feedback[selectedAnswer][0]
+                    : questions[currentQuestionIndex].ai_feedback[selectedAnswer][0]}
+                </p>
 
                 {!isCorrect && attempts < 3 && (
                   <div className="mt-4 flex space-x-4">
@@ -318,4 +314,4 @@ function Evaluation() {
   );
 }
 
-export default Evaluation;
+export default Composition;
