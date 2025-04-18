@@ -7,7 +7,7 @@ import Radio from "../components/Radio"; // Ensure this component exists
 
 const topics = [
   { title: "Operations on Functions", path: "/operations" },
-  { title: "Evaluation of Functions", path: "/evaluation" },
+  { title: "Evaluation of Functions", path: "/evaluationdifficulty" },
   { title: "Composition of Functions", path: "/topics/composition-of-functions" },
   { title: "Rational Functions", path: "/topics/rational-functions" },
   { title: "Vertical, Horizontal and Oblique Asymptotes", path: "/topics/asymptotes" },
